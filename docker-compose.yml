@@ -1,0 +1,56 @@
+version: '3.8'
+
+volumes:
+  data:
+
+services:
+  app:
+    image: itzg/minecraft-server:latest
+    build:
+      context: .
+      dockerfile: _docker/app/Dockerfile
+    volumes:
+      - ./data:/data:rw
+      - ./plugins:/plugins:ro
+    environment:
+      EULA: true # Setting this value to true indicates agreement with the Minecraft EULA
+      ENABLE_RCON: false # Setting this value to true enables RCON (Remote Console) support
+      ONLINE_MODE: false # Setting this value to true enables user authentication check
+      MEMORY_SIZE: 4G # Memory limit (replace with yours)
+      VERSION: LATEST # Minecraft server version (replace with yours)
+      SERVER_NAME: Gachi Brotherhood # Server name (replace with yours)
+      MOTD: Welcome to the Gachi Brotherhood, fucking slaves! # Message of the day (replace with yours)
+      LEVEL_TYPE: default # World generation type: default, flat, largebiomes, amplified, customized, buffet and others (according to image documentation)
+      MODE: survival # creative, survival, adventure, spectator (replace with yours)
+      FORCE_GAMEMODE: false # Force gamemode (replace with yours)
+      HARDCORE: false # Hardcore (replace with yours)
+      DIFFICULTY: normal  # peaceful, easy, normal, hard (replace with yours)
+      ANNOUNCE_PLAYER_ACHIEVEMENTS: true # Announce player achievements (replace with yours)
+      MAX_PLAYERS: 20 # Max players (replace with yours)
+      PVP: true # PVP mode (replace with yours)
+      ALLOW_FLIGHT: false # Allow flight (replace with yours)
+      MAX_WORLD_SIZE: # Max world size (replace with yours)
+      SPAWN_ANIMALS: true # Spawn animals (replace with yours)
+      SPAWN_MONSTERS: true # Spawn monsters (replace with yours)
+      SPAWN_PROTECTION: 40 # Set spawn protection (replace with yours)
+      VIEW_DISTANCE: 16 # View distance (replace with yours)
+      ENABLE_COMMAND_BLOCK: false # Enable command block (replace with yours)
+    ports:
+      - "25565:25565"
+    restart: unless-stopped
+    container_name: mcserver
+
+  backup:
+    image: itzg/mc-backup:latest
+    volumes:
+      - ./data:/data:ro
+      - ./backups:/backups # Minecraft backup's location
+    command: cp -r /data /backup/$(date +%Y-%m-%d_%H-%M-%S)
+    environment:
+      BACKUP_INTERVAL: 1d
+      PRUNE_BACKUPS_DAYS: 7
+    network_mode: service:app
+    restart: unless-stopped
+    depends_on:
+      app:
+        condition: service_healthy
